@@ -1,176 +1,126 @@
 import animalService from "../animal.service.mock.js";
 
-async function animal(name) {
-    const form = document.createElement('form');
-    let description = 'Add Animal';
-    let animal = null;
-    function createContent() {
-        const container = document.createElement('div');
-        container.classList.add('mb-2');
-        //create animal form content
-        const mb3Name = document.createElement('div');
-        mb3Name.classList.add('mb-3');
-        let editableInput = `<input type="text" class="form-control" id="name" name="name">`;
-        let readonlyInput = `<input type="text" class="form-control" id="name" name="name" value="${animal!=null?animal.name:""}" readonly>`;
-        mb3Name.innerHTML = '<label for="name" class="form-label">Animal Name</label>' +
-            (animal!=null ? readonlyInput : editableInput) +
-            '<p class="text-danger d-none"></p>';
-        container.append(mb3Name);
+function list(recordPage) {
+    const container = document.createElement('div');
+    container.classList.add('container');
+    const divWaiting = document.createElement('div');
+    divWaiting.classList.add('text-center');
+    divWaiting.innerHTML = '<i class="fa fa-5x fa-spinner fa-spin"></i>';
+    container.append(divWaiting);
 
-        const mb3Breed = document.createElement('div');
-        mb3Breed.classList.add('mb-3');
-        mb3Breed.innerHTML = '<label for="breed" class="form-label">Animal Breed</label>' +
-            `<input type="text" class="form-control" id="breed" name="breed" value="${animal!=null?animal.breed:""}">` +
-            '<p class="text-danger d-none"></p>';
-        container.append(mb3Breed);
-        
-        const mb3Leg = document.createElement('div');
-        mb3Leg.classList.add('mb-3');
-        mb3Leg.innerHTML = '<label for="legs" class="form-label">Number of Legs</label>' +
-            '<input type="text" class="form-control" id="legs" name="legs">' +
-            '<p class="text-danger d-none"></p>';
-        container.append(mb3Leg);
-        
-        const mb3Eye = document.createElement('div');
-        mb3Eye.classList.add('mb-3');
-        mb3Eye.innerHTML = '<label for="eyes" class="form-label">Number of Eyes</label>' +
-            '<input type="text" class="form-control" id="eyes" name="eyes">' +
-            '<p class="text-danger d-none"></p>';
-        container.append(mb3Eye);
-        
-        const mb3Sound = document.createElement('div');
-        mb3Sound.classList.add('mb-3');
-        mb3Sound.innerHTML = '<label for="sound" class="form-label">Sound this animal makes</label>' +
-            '<input type="text" class="form-control" id="sound" name="sound">' +
-            '<p class="text-danger d-none"></p>';
-        container.append(mb3Sound);        
+    const divMessage = document.createElement('div');
+    divMessage.classList.add('alert', 'text-center', 'd-none');
+    container.append(divMessage);
 
-        const submitBtn = document.createElement('div');
-        submitBtn.innerHTML = '<button type="submit" class="btn btn-primary">' +
-            'Save Animal <i class="fa-solid fa-check"></i>' +
-            '</button>';
-        container.append(submitBtn);        
-        ///
-        form.append(container);
-        return form;
+    function drawPagination({ page = 1, perPage = 5, pages = 10 }) {
+        function addPage(number, text, style) {
+            return `<li class="page-item ${style}">
+              <a class="page-link" href="./list.html?page=${number}&perPage=${perPage}">${text}</a>
+            </li>`
+        }
+        const pagination = document.createElement('div');
+        if (pages > 1) {
+            pagination.classList.remove('d-none');
+        }
+        const ul = document.createElement("ul");
+        ul.classList.add('pagination')
+        ul.insertAdjacentHTML('beforeend', addPage(page - 1, 'Previous', (page == 1) ? 'disabled' : ''))
+        for (let i = 1; i <= pages; i++) {
+            ul.insertAdjacentHTML('beforeend', addPage(i, i, (i == page) ? 'active' : ''));
+        }
+        ul.insertAdjacentHTML('beforeend', addPage(page + 1, 'Next', (page == pages) ? 'disabled' : ''))
+
+        pagination.append(ul);
+        return pagination;
     }
-    function validate() {
-        let valid = true;
-        // validate form
-        // test that name is valid
-        const name = form.name.value;
-        const eleNameError = form.name.nextElementSibling
-
-        if (name == "") {
-            eleNameError.classList.remove('d-none');
-            eleNameError.textContent = "You must name this animal!";
-            valid = false;
-        } else {
-            eleNameError.classList.add('d-none');
-        }
-
-        // test that breed is valid
-        const breed = form.breed.value;
-        const eleBreedError = form.breed.nextElementSibling
-        if (breed == "") {
-            eleBreedError.classList.remove('d-none');
-            eleBreedError.textContent = "What type of animal is this?";
-            valid = false;
-        } else {
-            eleBreedError.classList.add('d-none');
-        }
-
-        const legs = form.legs.value;
-        const eleLegsError = form.legs.nextElementSibling
-        if (legs == "") {
-            eleLegsError.classList.remove('d-none');
-            eleLegsError.textContent = "How many legs does this animal have?";
-            valid = false;
-        } else if (isNaN(legs)) {
-            eleLegsError.classList.remove('d-none');
-            eleLegsError.textContent = "This must be a number.";
-            valid = false;
-        } else {
-            eleLegsError.classList.add('d-none');
-        }
-
-        const eyes = form.eyes.value; // check that these are numbers
-        const sound = form.sound.value;
-        // return if the form is valid or not
-        return valid
-    }    
-    // create a handler to deal with the submit event
-    async function submit(action) {
-        // validate the form
-        const valid = validate();
-        // do stuff if the form is valid
-        if (valid) {
-            console.log('were good');
-
-            const formData = new FormData(form);
-            const animalObject = {};
-            formData.forEach((value, key) => {
-                if (key === 'eyes' || key === 'legs') {
-                    animalObject[key] = Number(value);
-                }
-                else {
-                    animalObject[key] = value;
-                }
-            });
-
-            const eleNameError = form.name.nextElementSibling
-            try {
-                if(action=="new"){
-                    await animalService.saveAnimal([animalObject]);
-                } else {
-                    await animalService.updateAnimal(animalObject)
-                } 
-                eleNameError.classList.add('d-none');
-                form.reset();
-                window.location = './list.html';
-            } catch (error) {
-                console.log(error);
-                eleNameError.classList.remove('d-none');
-                eleNameError.textContent = "This animal already exists!";
-            }
-            // do nothing if it's not
-        } else {
-            console.log('were not good');
-        }
-    }
-    
-    if (!name) {
-        // assign a handler to the submit event
-        form.addEventListener('submit', function (event) {
-            // prevent the default action from happening
-            event.preventDefault();
-            submit("new");
+    function drawAnimalTable(animals) {
+        const eleTable = document.createElement('table');
+        eleTable.classList.add('table', 'table-striped');
+        // Create a <thead> element
+        const thead = eleTable.createTHead();
+        // Create a row in the <thead>
+        const row = thead.insertRow();
+        // Create and append header cells
+        const headers = ['Name', 'Breed', 'Legs', 'Eyes', 'Sound'];
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            row.appendChild(th);
         });
+        for (let animal of animals) {
+            const row = eleTable.insertRow();
+            // create some rows for each animal field    
+            row.insertCell().textContent = animal.name;
+            row.insertCell().textContent = animal.breed;
+            row.insertCell().textContent = animal.legs;
+            row.insertCell().textContent = animal.eyes;
+            row.insertCell().textContent = animal.sound;
+            // create a cell to hold the buttons
+            const eleBtnCell = row.insertCell();
+            eleBtnCell.classList.add();
+            // create a delete button
+            const eleBtnDelete = document.createElement('button');
+            eleBtnDelete.classList.add('btn', 'btn-danger', 'mx-1');
+            eleBtnDelete.innerHTML = `<i class="fa fa-trash"></i>`;
+            eleBtnDelete.addEventListener('click', onDeleteButtonClick(animal));
+            // add the delete button to the button cell
+            eleBtnCell.append(eleBtnDelete);
+            // create an edit button
+            const eleBtnEdit = document.createElement('a');
+            eleBtnEdit.classList.add('btn', 'btn-primary', 'mx-1');
+            eleBtnEdit.innerHTML = `<i class="fa fa-user"></i>`;
+            eleBtnEdit.href = `./animal.html?name=${animal.name}`
+            // add the edit button to the button cell
+            eleBtnCell.append(eleBtnEdit);
+        }
+        return eleTable;
     }
-    else{
-        description = 'Update Animal';
-        try{
-            let ret = await animalService.findAnimal(name);
-            if(ret.length == 0){
-                throw 'No record';
+    function onDeleteButtonClick(animal) {
+        return event => {
+            animalService.deleteAnimal(animal.name).then(() => { window.location.reload(); });
+        }
+    }
+    function createContent() {
+        const params = new URLSearchParams(recordPage);
+        const url = new URL(`/api/animals?${params.toString()}`, 'https://inft2202.opentech.durhamcollege.org');
+        const req = new Request(url, {
+            headers: {
+                'User': 'studentId',
+                'apiKey': '7bfa2060-9d12-42fe-8549-cf9205d269a0'
+            },
+            method: 'GET',
+        });
+//do fetch here
+        fetch(req)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
-            animal = ret[0];
-            form.addEventListener('submit', function (event) {
-                // prevent the default action from happening
-                event.preventDefault();
-                submit("update");
-            });
-        }
-        catch(err){
-//show err on page
-            description = err;
-        }
+            return response.json();
+        })
+        .then((ret) => {
+            let { records, pagination } = ret;
+            divWaiting.classList.add('d-none');
+            let header = document.createElement('div');
+            header.classList.add('d-flex', 'justify-content-between');
+            let h1 = document.createElement('h1');
+            h1.innerHTML = 'Animal List';
+            header.append(h1);
+            header.append(drawPagination(pagination));
+            container.append(header);
+            container.append(drawAnimalTable(records));
+        })
+        .catch(err => {
+            divWaiting.classList.add('d-none');
+            divMessage.innerHTML = err;
+            divMessage.classList.remove('d-none');
+            divMessage.classList.add('alert-danger');
+        });
+        return container;
     }
-
     return {
-        description,
         element: createContent()
     }
 }
 
-export default animal;
+export default list;
