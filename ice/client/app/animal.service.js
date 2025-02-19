@@ -1,4 +1,7 @@
-
+/*
+ *  Since we are using the regular function keyword, 
+ *   we can export our service instance up here.
+ */
 export default new AnimalService({
     host: 'https://inft2202-server.onrender.com/',
     // host: 'http://localhost:3090',
