@@ -84,10 +84,11 @@
     "winston": "^3.17.0"
   },
   "scripts": {
+    "start": "node index.js",
+    "d": "node --inspect index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
-  "keywords": [],
   "description": ""
 }
