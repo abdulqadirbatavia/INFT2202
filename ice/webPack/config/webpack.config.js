@@ -12,18 +12,19 @@ export default {
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, '../dist'),
+    publicPath: '/', 
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',
-      inject: 'body', // Injects the script tag at the end of the body
+      inject: 'body',
     }),
     new CopyWebpackPlugin({
       patterns: [
-        { from: './public/img', to: 'img' }//it will copy to a temp folder under dev mode
+        { from: './public/img', to: 'img' }
       ]
     })
-  ],  
+  ],
   devServer: {
     static: {
       directory: path.join(__dirname, 'public'),
@@ -31,6 +32,7 @@ export default {
     compress: true,
     port: 9000,
     open: true,
+    historyApiFallback: true 
   },
   module: {
     rules: [
@@ -42,7 +44,7 @@ export default {
           name: '[name].[contenthash].[ext]',
           outputPath: 'img',
         },
-      },      
+      },
       {
         test: /\.ejs$/,
         loader: 'ejs-loader',
